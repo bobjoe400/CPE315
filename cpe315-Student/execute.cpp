@@ -31,6 +31,11 @@ ASPR flags;
 // flags for each instruction that does that. It only needs to take
 // one parameter as input, the result of whatever operation is executing
 
+void setNegZero(int num1){
+  flags.N = (num1<0) ? 1 : 0;
+  flags.Z = (num1 == 0) ? 1: 0;
+}
+
 // This function is complete, you should not have to modify it
 void setCarryOverflow (int num1, int num2, OFType oftype) {
   switch (oftype) {
@@ -99,6 +104,9 @@ static int checkCondition(unsigned short cond) {
       }
       break;
     case NE:
+      if (flags.Z != 1) {
+        return TRUE;
+      }
       break;
     case CS:
       break;
@@ -117,12 +125,24 @@ static int checkCondition(unsigned short cond) {
     case LS:
       break;
     case GE:
+      if (flags.N == 0){
+          return TRUE;
+      }
       break;
     case LT:
+      if (flags.N == 1){
+        return TRUE;
+      }
       break;
     case GT:
+      if (flags.N == 0 and flags.Z == 0){
+        return TRUE;
+      }
       break;
     case LE:
+      if (flags.N == 1 or flags.Z == 1){
+        return TRUE;
+      }
       break;
     case AL:
       return TRUE;
@@ -197,6 +217,11 @@ void execute() {
           rf.write(alu.instr.mov.rdn, alu.instr.mov.imm);
           break;
         case ALU_CMP:
+          if(alu.instr.cmp.imm){
+            setNegZero(rf[alu.instr.cmp.rdn]-rf[alu.instr.cmp.imm]);
+          }else{
+            setNegZero(rf[alu.instr.cmp.rdn]-rf[alu.instr.cmp.op]);
+          }
           break;
         case ALU_ADD8I:
           // needs stats and flags
