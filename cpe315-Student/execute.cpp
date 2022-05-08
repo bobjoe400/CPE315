@@ -251,7 +251,7 @@ void execute() {
           break;
         case ALU_CMP:
           if(alu.instr.cmp.imm){
-            setNegZero(rf[alu.instr.cmp.rdn]-rf[alu.instr.cmp.imm]);
+            setNegZero(rf[alu.instr.cmp.rdn]-alu.instr.cmp.imm);
           }else{
             setNegZero(rf[alu.instr.cmp.rdn]-rf[alu.instr.cmp.op]);
           }
