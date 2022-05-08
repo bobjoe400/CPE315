@@ -104,43 +104,67 @@ static int checkCondition(unsigned short cond) {
       }
       break;
     case NE:
-      if (flags.Z != 1) {
+      if (flags.Z == 0) {
         return TRUE;
       }
       break;
     case CS:
-      break;
-    case CC:
-      break;
-    case MI:
-      break;
-    case PL:
-      break;
-    case VS:
-      break;
-    case VC:
-      break;
-    case HI:
-      break;
-    case LS:
-      break;
-    case GE:
-      if (flags.N == 0){
-          return TRUE;
+      if (flags.C == 1) {
+        return TRUE;
       }
       break;
-    case LT:
+    case CC:
+      if (flags.C == 0) {
+        return TRUE;
+      }
+      break;
+    case MI:
       if (flags.N == 1){
         return TRUE;
       }
       break;
+    case PL:
+      if (flags.N == 1){
+        return TRUE;
+      }
+      break;
+    case VS:
+      if (flags.V == 0){
+        return TRUE;
+      }
+      break;
+    case VC:
+      if (flags.V == 0){
+        return TRUE;
+      }
+      break;
+    case HI:
+      if (flags.C == 1 and flags.Z == 0){
+        return TRUE;
+      }
+      break;
+    case LS:
+      if (flags.C == 0 and flags.Z == 1){
+        return TRUE;
+      }
+      break;
+    case GE:
+      if (flags.N == flags.V){
+          return TRUE;
+      }
+      break;
+    case LT:
+      if (flags.N != flags.V){
+        return TRUE;
+      }
+      break;
     case GT:
-      if (flags.N == 0 and flags.Z == 0){
+      if (flags.Z == 0 and flags.N == flags.V){
         return TRUE;
       }
       break;
     case LE:
-      if (flags.N == 1 or flags.Z == 1){
+      if (flags.Z == 1 or flags.N != flags.V){
         return TRUE;
       }
       break;
@@ -354,6 +378,7 @@ void execute() {
       // Essentially the same as the conditional branches, but with no
       // condition check, and an 11-bit immediate field
       decode(uncond);
+      rf.write(PC_REG, PC + 2* signExtend8to32ui(cond.instr.b.imm) + 2);
       break;
     case LDM:
       decode(ldm);

@@ -85,7 +85,7 @@ ALU_Ops decode (const ALU_Type data) {
   }
   else if (data.instr.addr.op == ALU_ADDR_OP) {
     if (opts.instrs) { 
-      cout << "adds r" << data.instr.addr.rd  << ", r" << data.instr.addr.rn << ", r" << data.instr.addr.rm << endl;
+      cout << "add r" << data.instr.addr.rd  << ", r" << data.instr.addr.rn << ", r" << data.instr.addr.rm << endl;
     }
     return ALU_ADDR;
   }
@@ -98,7 +98,7 @@ ALU_Ops decode (const ALU_Type data) {
   else if (data.instr.add3i.op == ALU_ADD3I_OP) {
     // complete
     if (opts.instrs) { 
-      cout << "adds r" << data.instr.add3i.rd << ", r" << data.instr.add3i.rn << ", #" << data.instr.add3i.imm << endl;
+      cout << "add r" << data.instr.add3i.rd << ", r" << data.instr.add3i.rn << ", #" << data.instr.add3i.imm << endl;
     }
     return ALU_ADD3I;
   }
@@ -111,13 +111,13 @@ ALU_Ops decode (const ALU_Type data) {
   else if (data.instr.add8i.op == ALU_ADD8I_OP) {
     // complete
     if (opts.instrs) { 
-      cout << "adds r" << data.instr.add8i.rdn << ", #" << setbase(10) << data.instr.add8i.imm << endl;
+      cout << "add r" << data.instr.add8i.rdn << ", #" << setbase(10) << data.instr.add8i.imm << endl;
     }
     return ALU_ADD8I;
   }
   else if (data.instr.sub8i.op == ALU_SUB8I_OP) {
     if (opts.instrs){
-      cout << "subs r" << data.instr.sub8i.rdn << ", #" << setbase(10) << data.instr.sub8i.imm << endl;
+      cout << "sub r" << data.instr.sub8i.rdn << ", #" << setbase(10) << data.instr.sub8i.imm << endl;
     }
     return ALU_SUB8I;
   }
@@ -131,7 +131,7 @@ ALU_Ops decode (const ALU_Type data) {
   else if (data.instr.mov.op == ALU_MOV_OP) { 
     // complete
     if (opts.instrs) { 
-      cout << "movs r" << data.instr.mov.rdn << ", #" << setbase(10) << (data.instr.mov.imm) << endl;
+      cout << "mov r" << data.instr.mov.rdn << ", #" << setbase(10) << (data.instr.mov.imm) << endl;
     }
     return ALU_MOV;
   }
@@ -141,7 +141,7 @@ ALU_Ops decode (const ALU_Type data) {
 DP_Ops decode (const DP_Type data) {
   if (data.instr.DP_Instr.op == DP_CMP) {
     if (opts.instrs){
-      cout << "cmps r" << data.instr.DP_Instr.rdn << ", r" << data.instr.DP_Instr.rm << endl;
+      cout << "cmp r" << data.instr.DP_Instr.rdn << ", r" << data.instr.DP_Instr.rm << endl;
     }
     return DP_CMP;
   }
