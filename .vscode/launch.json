@@ -34,7 +34,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/cpe315-Student/thumbsim",
-            "args": ["-i", "-d", "-f","inputs/fib.sim"],
+            "args": ["-i", "-w", "-f","inputs/fib.sim"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],

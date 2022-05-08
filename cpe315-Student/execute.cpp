@@ -175,6 +175,14 @@ static int checkCondition(unsigned short cond) {
   return FALSE;
 }
 
+int getBitCount(unsigned short registers){
+  int BitCount=0;
+  for(int i = 0; i<16; i++){
+    BitCount += (registers>>i) & 1;
+  }
+  return BitCount;
+}
+
 void execute() {
   Data16 instr = imem[PC];
   Data16 instr2;
@@ -187,6 +195,7 @@ void execute() {
   unsigned int list, mask;
   int num1, num2, result, BitCount;
   unsigned int bit;
+  unsigned short registers = 0;
 
   /* Convert instruction to correct type */
   /* Types are described in Section A5 of the armv7 manual */
@@ -327,10 +336,12 @@ void execute() {
           rf.write(ld_st.instr.ld_st_imm.rt, dmem[addr]);
           break;
         case STRR:
-          // need to implement
+          addr = rf[ld_st.instr.ld_st_reg.rn] + rf[ld_st.instr.ld_st_reg.rm];
+          dmem.write(addr, rf[ld_st.instr.ld_st_reg.rt]);
           break;
         case LDRR:
-          // need to implement
+          addr = rf[ld_st.instr.ld_st_reg.rn] + rf[ld_st.instr.ld_st_reg.rm];
+          rf.write(ld_st.instr.ld_st_reg.rt, dmem[addr]);
           break;
         case STRBI:
           // need to implement
@@ -350,10 +361,31 @@ void execute() {
       misc_ops = decode(misc);
       switch(misc_ops) {
         case MISC_PUSH:
-          // need to implement
+          registers = (misc.instr.push.m<<14)|misc.instr.push.reg_list;
+          BitCount = getBitCount(registers);
+          addr = SP - 4*BitCount;
+          for(i = 0; i<15; i++){
+            if((registers>>i) & 1){
+              dmem.write(addr, rf[i]);
+              addr += 4;
+            }
+          }
+          rf.write(SP_REG, SP - 4*BitCount);
           break;
         case MISC_POP:
-          // need to implement
+          registers = (misc.instr.pop.m<<15)|misc.instr.pop.reg_list;
+          BitCount = getBitCount(registers);
+          addr = SP;
+          for(i = 0; i<15; i++){
+            if((registers>>i) & 1 ){
+              rf.write(i, dmem[addr]);
+              addr +=4;
+            }
+          }
+          if(registers>>15){
+            rf.write(PC_REG, dmem[addr]);
+          }
+          rf.write(SP_REG, SP + 4*BitCount);
           break;
         case MISC_SUB:
           // functionally complete, needs stats
@@ -419,4 +451,5 @@ void execute() {
       exit(1);
       break;
   }
+  return;
 }
