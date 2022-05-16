@@ -152,7 +152,7 @@ static int checkCondition(unsigned short cond) {
       }
       break;
     case LS:
-      if (flags.C == 0 and flags.Z == 1){
+      if (flags.C == 0 or flags.Z == 1){
         return TRUE;
       }
       break;
@@ -214,6 +214,7 @@ void execute() {
   int num1, num2, result, BitCount;
   unsigned int bit;
   unsigned short registers = 0;
+  bool wback = FALSE;
 
   /* Convert instruction to correct type */
   /* Types are described in Section A5 of the armv7 manual */
@@ -250,39 +251,53 @@ void execute() {
       add_ops = decode(alu);
       switch(add_ops) {
         case ALU_LSLI:
-          // needs stats and flags
+          // needs stats
+          setCarryOverflow(rf[alu.instr.lsli.rm], alu.instr.lsli.imm, OF_SHIFT);
+          setNegativeZero(rf[alu.instr.lsli.rm]<<alu.instr.lsli.imm);
           rf.write(alu.instr.lsli.rd, rf[alu.instr.lsli.rm]<<alu.instr.lsli.imm);
           break;
         case ALU_ADDR:
-          // needs stats and flags
+          // needs stats
+          setCarryOverflow(rf[alu.instr.addr.rn], rf[alu.instr.addr.rm], OF_ADD);
+          setNegativeZero(rf[alu.instr.addr.rn] + rf[alu.instr.addr.rm]);
           rf.write(alu.instr.addr.rd, rf[alu.instr.addr.rn] + rf[alu.instr.addr.rm]);
           break;
         case ALU_SUBR:
+          setCarryOverflow(rf[alu.instr.subr.rn], rf[alu.instr.subr.rm], OF_SUB);
+          setNegativeZero(rf[alu.instr.subr.rn] - rf[alu.instr.subr.rm]);
           rf.write(alu.instr.subr.rd, rf[alu.instr.subr.rn] - rf[alu.instr.subr.rm]);
           break;
         case ALU_ADD3I:
-          // needs stats and flags
+          // needs stats
+          setCarryOverflow(rf[alu.instr.add3i.rn], alu.instr.add3i.imm, OF_ADD);
+          setNegativeZero(rf[alu.instr.add3i.rn] + alu.instr.add3i.imm);
           rf.write(alu.instr.add3i.rd, rf[alu.instr.add3i.rn] + alu.instr.add3i.imm);
           break;
         case ALU_SUB3I:
+          //needs stats
+          setCarryOverflow(rf[alu.instr.sub3i.rn], alu.instr.sub3i.imm, OF_SUB);
+          setNegativeZero(rf[alu.instr.sub3i.rn] - alu.instr.sub3i.imm);
           rf.write(alu.instr.sub3i.rd, rf[alu.instr.sub3i.rn] - alu.instr.sub3i.imm);
           break;
         case ALU_MOV:
-          // needs stats and flags
+          // needs stats
+          setNegativeZero(alu.instr.mov.imm);
           rf.write(alu.instr.mov.rdn, alu.instr.mov.imm);
           break;
         case ALU_CMP:
-          if(alu.instr.cmp.imm){
-            setNegativeZero(rf[alu.instr.cmp.rdn]-alu.instr.cmp.imm);
-          }else{
-            setNegativeZero(rf[alu.instr.cmp.rdn]-rf[alu.instr.cmp.op]);
-          }
+          // needs stats
+          setNegativeZero(rf[alu.instr.cmp.rdn]-alu.instr.cmp.imm);
           break;
         case ALU_ADD8I:
-          // needs stats and flags
+          // needs stats
+          setCarryOverflow(rf[alu.instr.add8i.rdn], alu.instr.add8i.imm, OF_ADD);
+          setNegativeZero(rf[alu.instr.add8i.rdn] + alu.instr.add8i.imm);
           rf.write(alu.instr.add8i.rdn, rf[alu.instr.add8i.rdn] + alu.instr.add8i.imm);
           break;
         case ALU_SUB8I:
+          //needs stats
+          setCarryOverflow(rf[alu.instr.sub8i.rdn], alu.instr.sub8i.imm, OF_SUB);
+          setNegativeZero(rf[alu.instr.sub8i.rdn] - alu.instr.sub8i.imm);
           rf.write(alu.instr.sub8i.rdn, rf[alu.instr.sub8i.rdn] + alu.instr.add8i.imm);
           break;
         default:
@@ -326,7 +341,8 @@ void execute() {
       dp_ops = decode(dp);
       switch(dp_ops) {
         case DP_CMP:
-          setNegativeZero(dp.instr.DP_Instr.rdn - dp.instr.DP_Instr.rm);
+          //needs stats
+          setNegativeZero(rf[dp.instr.DP_Instr.rdn] - rf[dp.instr.DP_Instr.rm]);
           break;
       }
       break;
@@ -334,7 +350,8 @@ void execute() {
       sp_ops = decode(sp);
       switch(sp_ops) {
         case SP_MOV:
-          // needs stats and flags
+          // needs stats
+          setNegativeZero(rf[sp.instr.mov.rm]);
           rf.write((sp.instr.mov.d << 3 ) | sp.instr.mov.rd, rf[sp.instr.mov.rm]);
           break;
         case SP_ADD:
@@ -431,7 +448,7 @@ void execute() {
           rf.write(SP_REG, SP - 4*BitCount);
           break;
         case MISC_POP:
-          //Psuedocode from ARm Assembly Manual
+          //Psuedocode from ARM Assembly Manual
           //Functionally complete, needs stats
           registers = (misc.instr.pop.m<<15)|misc.instr.pop.reg_list;
           BitCount = getBitCount(registers);
@@ -469,16 +486,36 @@ void execute() {
     case UNCOND:
       // Essentially the same as the conditional branches, but with no
       // condition check, and an 11-bit immediate field
+      //needs stats
       decode(uncond);
       rf.write(PC_REG, PC + 2* signExtend8to32ui(cond.instr.b.imm) + 2);
       break;
     case LDM:
       decode(ldm);
-      // need to implement
+      BitCount = getBitCount(ldm.instr.ldm.reg_list);
+      wback = (ldm.instr.ldm.reg_list >> ldm.instr.ldm.rn) & 0;
+      addr = rf[ldm.instr.ldm.rn];
+      for(int i = 0; i < 8; i++){
+        if(ldm.instr.ldm.reg_list>>i){
+          rf.write(i, dmem[addr]);
+          addr += 4;
+        }
+      }
+      if(wback){
+        rf.write(ldm.instr.ldm.rn, rf[ldm.instr.ldm.rn]+4*BitCount);
+      }
       break;
     case STM:
       decode(stm);
-      // need to implement
+      BitCount = getBitCount(stm.instr.stm.reg_list);
+      addr = rf[stm.instr.stm.rn];
+      for(i = 0; i < 8; i++){
+        if(stm.instr.stm.reg_list>>i){
+          dmem.write(addr, rf[i]);
+          addr += 4;
+        }
+      }
+      rf.write(stm.instr.stm.rn, rf[stm.instr.stm.rn]+4*BitCount);
       break;
     case LDRL:
       // This instruction is complete, nothing needed
