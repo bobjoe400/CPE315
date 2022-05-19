@@ -21,7 +21,7 @@ unsigned int signExtend16to32ui(short i) {
 
 unsigned int signExtend11to32ui(short i){
   if(i>>10&1){
-    return static_cast<unsigned int>(static_cast<int>(i&0b1111111111111111));
+    return static_cast<unsigned int>(static_cast<int>(i));
   }else{
     return static_cast<unsigned int>(static_cast<int>(i&0b0000011111111111));
   }
@@ -209,7 +209,7 @@ void execute() {
   // the following counts as a read to PC
   unsigned int pctarget = PC + 2;
   unsigned int addr;
-  int i, n, offset;
+  int i, n, m, offset;
   unsigned int list, mask;
   int num1, num2, result, BitCount;
   unsigned int bit;
@@ -287,6 +287,7 @@ void execute() {
         case ALU_CMP:
           // needs stats
           setNegativeZero(rf[alu.instr.cmp.rdn]-alu.instr.cmp.imm);
+          setCarryOverflow(rf[alu.instr.cmp.rdn], alu.instr.cmp.imm, OF_SUB);
           break;
         case ALU_ADD8I:
           // needs stats
@@ -343,6 +344,7 @@ void execute() {
         case DP_CMP:
           //needs stats
           setNegativeZero(rf[dp.instr.DP_Instr.rdn] - rf[dp.instr.DP_Instr.rm]);
+          setCarryOverflow(rf[dp.instr.DP_Instr.rdn], rf[dp.instr.DP_Instr.rm], OF_SUB);
           break;
       }
       break;
@@ -351,7 +353,6 @@ void execute() {
       switch(sp_ops) {
         case SP_MOV:
           // needs stats
-          setNegativeZero(rf[sp.instr.mov.rm]);
           rf.write((sp.instr.mov.d << 3 ) | sp.instr.mov.rd, rf[sp.instr.mov.rm]);
           break;
         case SP_ADD:
@@ -378,7 +379,7 @@ void execute() {
           }
           break;
         case SP_CMP:
-          // need to implement these
+
           break;
       }
       break;
@@ -488,7 +489,7 @@ void execute() {
       // condition check, and an 11-bit immediate field
       //needs stats
       decode(uncond);
-      rf.write(PC_REG, PC + 2* signExtend8to32ui(cond.instr.b.imm) + 2);
+      rf.write(PC_REG, PC + 2* signExtend11to32ui(cond.instr.b.imm) + 2);
       break;
     case LDM:
       decode(ldm);

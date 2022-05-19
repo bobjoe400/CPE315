@@ -34,7 +34,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/cpe315-Student/thumbsim",
-            "args": ["-i", "-w", "-f","inputs/shang.O0.sim"],
+            "args": ["-disf","inputs/shang.O0.sim"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],

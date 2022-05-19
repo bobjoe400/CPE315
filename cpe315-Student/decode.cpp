@@ -80,14 +80,14 @@ ALU_Ops decode (const ALU_Type data) {
   if (data.instr.lsli.op == ALU_LSLI_OP) {
     // complete
     if(opts.instrs) {
-      cout << "lsl r" << data.instr.lsli.rd << ", r" << data.instr.lsli.rm << endl;
+      cout << "lsls r" << data.instr.lsli.rd << ", r" << data.instr.lsli.rm << ", #"<<setbase(10)<<data.instr.lsli.imm<<endl;
     }
     return ALU_LSLI;
   }
   else if (data.instr.addr.op == ALU_ADDR_OP) {
     // complete
     if (opts.instrs) { 
-      cout << "add r" << data.instr.addr.rd  << ", r" << data.instr.addr.rn << ", r" << data.instr.addr.rm << endl;
+      cout << "adds r" << data.instr.addr.rd  << ", r" << data.instr.addr.rn << ", r" << data.instr.addr.rm << endl;
     }
     return ALU_ADDR;
   }
@@ -101,28 +101,28 @@ ALU_Ops decode (const ALU_Type data) {
   else if (data.instr.add3i.op == ALU_ADD3I_OP) {
     // complete
     if (opts.instrs) { 
-      cout << "add r" << data.instr.add3i.rd << ", r" << data.instr.add3i.rn << ", #" << data.instr.add3i.imm << endl;
+      cout << "adds r" << data.instr.add3i.rd << ", r" << data.instr.add3i.rn << ", #" << setbase(10)<< data.instr.add3i.imm << endl;
     }
     return ALU_ADD3I;
   }
   else if (data.instr.sub3i.op == ALU_SUB3I_OP) {
     // complete
     if (opts.instrs) {
-      cout << "subs r" << data.instr.sub3i.rd << ", r" << data.instr.sub3i.rn << ", #" << data.instr.sub3i.imm << endl;
+      cout << "subs r" << data.instr.sub3i.rd << ", r" << data.instr.sub3i.rn << ", #" <<setbase(10)<< data.instr.sub3i.imm << endl;
     }
     return ALU_SUB3I;
   }
   else if (data.instr.add8i.op == ALU_ADD8I_OP) {
     // complete
     if (opts.instrs) { 
-      cout << "add r" << data.instr.add8i.rdn << ", #" << setbase(10) << data.instr.add8i.imm << endl;
+      cout << "adds r" << data.instr.add8i.rdn << ", #" << setbase(10) << data.instr.add8i.imm << endl;
     }
     return ALU_ADD8I;
   }
   else if (data.instr.sub8i.op == ALU_SUB8I_OP) {
     // complete
     if (opts.instrs){
-      cout << "sub r" << data.instr.sub8i.rdn << ", #" << setbase(10) << data.instr.sub8i.imm << endl;
+      cout << "subs r" << data.instr.sub8i.rdn << ", #" << setbase(10) << data.instr.sub8i.imm << endl;
     }
     return ALU_SUB8I;
   }
@@ -136,7 +136,7 @@ ALU_Ops decode (const ALU_Type data) {
   else if (data.instr.mov.op == ALU_MOV_OP) { 
     // complete
     if (opts.instrs) { 
-      cout << "mov r" << data.instr.mov.rdn << ", #" << setbase(10) << (data.instr.mov.imm) << endl;
+      cout << "movs r" << data.instr.mov.rdn << ", #" << setbase(10) << (data.instr.mov.imm) << endl;
     }
     return ALU_MOV;
   }
@@ -185,6 +185,14 @@ SP_Ops decode (const SP_Type data) {
   }
   else if (data.instr.add.op == 0) {
     // Here you'll need to SP_ADD similar to above
+    if(data.instr.add.d<<3|data.instr.add.rd == 13){
+      cout << "add sp, sp, r" << data.instr.add.rm << endl;
+    }else if(data.instr.add.rm == 13){
+      cout << "add r"<<data.instr.add.rd<<", sp, r"<<data.instr.add.rd<<endl;
+    }
+    else{
+      cout << "add r"<<data.instr.add.rd << ", r"<<data.instr.add.rm<<endl;
+    }
     return SP_ADD;
   }
   else if (data.instr.cmp.op == 1) {
@@ -466,7 +474,7 @@ int decode (const LDM_Type data) {
 int decode (const STM_Type data) {
   // complete
   int tot_registers = 0;
-  cout<<"stm "<<data.instr.stm.rn<<"!"<<",";
+  cout<<"stm r"<<data.instr.stm.rn<<"!"<<", {";
   for(int i = 0; i < 8; i++){
     if(data.instr.stm.reg_list>>i & 1){
       if(tot_registers>1){
@@ -483,7 +491,7 @@ int decode (const STM_Type data) {
 int decode (const LDRL_Type data) {
   // complete
   if (opts.instrs){
-    cout << "ldr "<< data.instr.ldrl.rt << ", #" << data.instr.ldrl.imm << endl;
+    cout << "ldr r"<< data.instr.ldrl.rt << ", [pc, #" << setbase(10) << (data.instr.ldrl.imm<<2) <<"]"<< endl;
   }
   return LDRL;
 }
@@ -491,6 +499,6 @@ int decode (const LDRL_Type data) {
 int decode (const ADD_SP_Type data) {
   // complete
   if (opts.instrs) { 
-    cout << "add r" << data.instr.add.rd << ", sp, #" << data.instr.add.imm*4 << endl;
+    cout << "add r" << data.instr.add.rd << ", sp, #" << setbase(10) << data.instr.add.imm*4 << endl;
   }
 }
