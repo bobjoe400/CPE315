@@ -549,5 +549,8 @@ void execute() {
       exit(1);
       break;
   }
+  if((unsigned int) dmem[0xfffff6e0] != 0){
+    cout<<"wtf "<<instr<<endl;
+  }
   return;
 }

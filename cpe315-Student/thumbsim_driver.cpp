@@ -48,7 +48,6 @@ void Memory<Data16, Data16>::write(const unsigned int addr, const Data16 data) {
 template<>
 void Memory<Data32, Data32>::write(const unsigned int addr, const Data32 data) {
   unsigned int myAddr = addr - base;
-  // cout << hex << addr << ": " << data << endl;
   m[myAddr] = data;
 }
 
