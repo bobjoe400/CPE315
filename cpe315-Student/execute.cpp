@@ -389,8 +389,6 @@ void execute() {
             stats.numRegWrites += 1;
           }
           else { // regular case
-            setCarryOverflow(rf[sp.instr.add.rm], rf[(sp.instr.add.d << 3) | sp.instr.add.rd], OF_ADD);
-            setNegativeZero(rf[sp.instr.add.rm] + rf[(sp.instr.add.d << 3) | sp.instr.add.rd]);
             rf.write((sp.instr.add.d << 3) | sp.instr.add.rd, rf[sp.instr.add.rm] + rf[(sp.instr.add.d << 3) | sp.instr.add.rd]);
 
             stats.numRegReads += 2;
@@ -398,7 +396,10 @@ void execute() {
           }
           break;
         case SP_CMP:
-
+          n = (sp.instr.cmp.d<<3)|sp.instr.cmp.rd;
+          setNegativeZero(rf[n] - rf[sp.instr.cmp.rm]);
+          setCarryOverflow(rf[n], rf[sp.instr.cmp.rm], OF_SUB);
+          stats.numRegReads += 2;
           break;
       }
       break;

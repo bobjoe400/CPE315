@@ -185,13 +185,13 @@ SP_Ops decode (const SP_Type data) {
   }
   else if (data.instr.add.op == 0) {
     // Here you'll need to SP_ADD similar to above
-    if(data.instr.add.d<<3|data.instr.add.rd == 13){
+    if((data.instr.add.d<<3|data.instr.add.rd) == 13){
       cout << "add sp, sp, r" << data.instr.add.rm << endl;
     }else if(data.instr.add.rm == 13){
       cout << "add r"<<data.instr.add.rd<<", sp, r"<<data.instr.add.rd<<endl;
     }
     else{
-      cout << "add r"<<data.instr.add.rd<<", r"<<data.instr.add.rd << ", r"<<data.instr.add.rm<<endl;
+      cout << "add r"<<(data.instr.add.d<<3|data.instr.add.rd)<<", r"<<(data.instr.add.d<<3|data.instr.add.rd) << ", r"<<data.instr.add.rm<<endl;
     }
     return SP_ADD;
   }
