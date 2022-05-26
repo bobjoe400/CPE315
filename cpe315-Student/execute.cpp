@@ -200,13 +200,15 @@ int getBitCount(unsigned short registers){
 
 void execute() {
   Data16 instr = imem[PC];
+  stats.instrs++;
   Data16 instr2;
   Data32 temp(0); // Use this for STRB instructions
   Thumb_Types itype;
   // the following counts as a read to PC
   unsigned int pctarget = PC + 2;
+  stats.numRegReads++;
   unsigned int addr;
-  int i, n, m, offset;
+  int i, n, m, offset, currPC, branchAddr;
   unsigned int list, mask;
   int num1, num2, result, BitCount;
   unsigned int bit;
@@ -252,51 +254,67 @@ void execute() {
           setCarryOverflow(rf[alu.instr.lsli.rm], alu.instr.lsli.imm, OF_SHIFT);
           setNegativeZero(rf[alu.instr.lsli.rm]<<alu.instr.lsli.imm);
           rf.write(alu.instr.lsli.rd, rf[alu.instr.lsli.rm]<<alu.instr.lsli.imm);
+          stats.numRegReads++;
+          stats.numRegWrites++;
           break;
         case ALU_ADDR:
           // needs stats
           setCarryOverflow(rf[alu.instr.addr.rn], rf[alu.instr.addr.rm], OF_ADD);
           setNegativeZero(rf[alu.instr.addr.rn] + rf[alu.instr.addr.rm]);
           rf.write(alu.instr.addr.rd, rf[alu.instr.addr.rn] + rf[alu.instr.addr.rm]);
+          stats.numRegReads+=2;
+          stats.numRegWrites++;
           break;
         case ALU_SUBR:
           setCarryOverflow(rf[alu.instr.subr.rn], rf[alu.instr.subr.rm], OF_SUB);
           setNegativeZero(rf[alu.instr.subr.rn] - rf[alu.instr.subr.rm]);
           rf.write(alu.instr.subr.rd, rf[alu.instr.subr.rn] - rf[alu.instr.subr.rm]);
+          stats.numRegReads+=2;
+          stats.numRegWrites++;
           break;
         case ALU_ADD3I:
           // needs stats
           setCarryOverflow(rf[alu.instr.add3i.rn], alu.instr.add3i.imm, OF_ADD);
           setNegativeZero(rf[alu.instr.add3i.rn] + alu.instr.add3i.imm);
           rf.write(alu.instr.add3i.rd, rf[alu.instr.add3i.rn] + alu.instr.add3i.imm);
+          stats.numRegReads++;
+          stats.numRegWrites++;
           break;
         case ALU_SUB3I:
           //needs stats
           setCarryOverflow(rf[alu.instr.sub3i.rn], alu.instr.sub3i.imm, OF_SUB);
           setNegativeZero(rf[alu.instr.sub3i.rn] - alu.instr.sub3i.imm);
           rf.write(alu.instr.sub3i.rd, rf[alu.instr.sub3i.rn] - alu.instr.sub3i.imm);
+          stats.numRegReads++;
+          stats.numRegWrites++;
           break;
         case ALU_MOV:
           // needs stats
           setNegativeZero(alu.instr.mov.imm);
           rf.write(alu.instr.mov.rdn, alu.instr.mov.imm);
+          stats.numRegWrites++;
           break;
         case ALU_CMP:
           // needs stats
           setNegativeZero(rf[alu.instr.cmp.rdn]-alu.instr.cmp.imm);
           setCarryOverflow(rf[alu.instr.cmp.rdn], alu.instr.cmp.imm, OF_SUB);
+          stats.numRegReads++;
           break;
         case ALU_ADD8I:
           // needs stats
           setCarryOverflow(rf[alu.instr.add8i.rdn], alu.instr.add8i.imm, OF_ADD);
           setNegativeZero(rf[alu.instr.add8i.rdn] + alu.instr.add8i.imm);
           rf.write(alu.instr.add8i.rdn, rf[alu.instr.add8i.rdn] + alu.instr.add8i.imm);
+          stats.numRegReads++;
+          stats.numRegWrites++;
           break;
         case ALU_SUB8I:
           //needs stats
           setCarryOverflow(rf[alu.instr.sub8i.rdn], alu.instr.sub8i.imm, OF_SUB);
           setNegativeZero(rf[alu.instr.sub8i.rdn] - alu.instr.sub8i.imm);
           rf.write(alu.instr.sub8i.rdn, rf[alu.instr.sub8i.rdn] - alu.instr.add8i.imm);
+          stats.numRegReads++;
+          stats.numRegWrites++;
           break;
         default:
           cout << "instruction not implemented" << endl;
@@ -342,6 +360,7 @@ void execute() {
           //needs stats
           setNegativeZero(rf[dp.instr.DP_Instr.rdn] - rf[dp.instr.DP_Instr.rm]);
           setCarryOverflow(rf[dp.instr.DP_Instr.rdn], rf[dp.instr.DP_Instr.rm], OF_SUB);
+          stats.numRegReads+=2;
           break;
       }
       break;
@@ -351,6 +370,8 @@ void execute() {
         case SP_MOV:
           // needs stats
           rf.write((sp.instr.mov.d << 3 ) | sp.instr.mov.rd, rf[sp.instr.mov.rm]);
+          stats.numRegReads++;
+          stats.numRegWrites++;
           break;
         case SP_ADD:
           // Special SP cases do not update the flags
@@ -390,21 +411,31 @@ void execute() {
           addr = rf[ld_st.instr.ld_st_imm.rn] + ld_st.instr.ld_st_imm.imm * 4;
           dmem.write(addr, rf[ld_st.instr.ld_st_imm.rt]);
           caches.access(addr);
+          stats.numRegReads+=2;
+          stats.numMemWrites++;
           break;
         case LDRI:
           // functionally complete, needs stats
           addr = rf[ld_st.instr.ld_st_imm.rn] + ld_st.instr.ld_st_imm.imm * 4;
           rf.write(ld_st.instr.ld_st_imm.rt, dmem[addr]);
+          caches.access(addr);
+          stats.numRegReads++;
+          stats.numMemReads++;
+          stats.numRegWrites++;
           break;
         case STRR:
           // functionally complete, needs stats
           addr = rf[ld_st.instr.ld_st_reg.rn] + rf[ld_st.instr.ld_st_reg.rm];
           dmem.write(addr, rf[ld_st.instr.ld_st_reg.rt]);
+          caches.access(addr);
+          stats.numRegReads+=3;
+          stats.numMemWrites++;
           break;
         case LDRR:
           // functionally complete, needs stats
           addr = rf[ld_st.instr.ld_st_reg.rn] + rf[ld_st.instr.ld_st_reg.rm];
           rf.write(ld_st.instr.ld_st_reg.rt, dmem[addr]);
+          caches.access(addr);
           stats.numRegReads+=2;
           stats.numMemReads++;
           stats.numRegWrites++;
@@ -415,6 +446,7 @@ void execute() {
           temp = dmem[addr];
           temp.set_data_ubyte4(0, rf[ld_st.instr.ld_st_imm.rt].data_ubyte4(3));
           dmem.write(addr, temp);
+          caches.access(addr);
           stats.numRegReads+=2;
           stats.numMemWrites++;
           break;
@@ -422,6 +454,7 @@ void execute() {
           // functionally complete, needs stats
           addr = rf[ld_st.instr.ld_st_imm.rn] + ld_st.instr.ld_st_imm.imm;
           rf.write(ld_st.instr.ld_st_imm.rt, dmem[addr].data_ubyte4(0));
+          caches.access(addr);
           stats.numRegReads++;
           stats.numMemReads++;
           stats.numRegWrites++;
@@ -432,6 +465,7 @@ void execute() {
           temp = dmem[addr];
           temp.set_data_ubyte4(0, rf[ld_st.instr.ld_st_reg.rt].data_ubyte4(3));
           dmem.write(addr, temp);
+          caches.access(addr);
           stats.numRegReads+=3;
           stats.numMemWrites++;
           break;
@@ -439,6 +473,7 @@ void execute() {
           // functionally complete, needs stats
           addr = rf[ld_st.instr.ld_st_reg.rn] + rf[ld_st.instr.ld_st_reg.rm];
           rf.write(ld_st.instr.ld_st_reg.rt, dmem[addr].data_ubyte4(0));
+          caches.access(addr);
           stats.numRegReads+=2;
           stats.numMemReads++;
           stats.numRegWrites++;
@@ -458,6 +493,7 @@ void execute() {
           for(i = 0; i<15; i++){
             if((registers>>i) & 1){
               dmem.write(addr, rf[i]);
+              caches.access(addr);
               stats.numRegReads++;
               stats.numMemWrites++;
               addr += 4;
@@ -476,6 +512,7 @@ void execute() {
           for(i = 0; i<15; i++){
             if((registers>>i) & 1 ){
               rf.write(i, dmem[addr]);
+              caches.access(addr);
               stats.numRegWrites++;
               stats.numMemReads++;
               addr +=4;
@@ -483,6 +520,7 @@ void execute() {
           }
           if(registers>>15){
             rf.write(PC_REG, dmem[addr]);
+            caches.access(addr);
             stats.numRegWrites++;
             stats.numMemReads++;
           }
@@ -509,8 +547,8 @@ void execute() {
       // Once you've completed the checkCondition function,
       // this should work for all your conditional branches.
       // needs stats
-      int currPC = PC;
-      int branchAddr = PC + 2 * signExtend8to32ui(cond.instr.b.imm) + 2;
+      currPC = PC;
+      branchAddr = PC + 2 * signExtend8to32ui(cond.instr.b.imm) + 2;
       if (checkCondition(cond.instr.b.cond)){
         rf.write(PC_REG, branchAddr);
         if(branchAddr<currPC){
@@ -543,6 +581,7 @@ void execute() {
       for(int i = 0; i < 8; i++){
         if((ldm.instr.ldm.reg_list>>i)&1){
           rf.write(i, dmem[addr]);
+          caches.access(addr);
           stats.numMemReads++;
           stats.numRegWrites++;
           addr += 4;
@@ -561,6 +600,7 @@ void execute() {
       for(i = 0; i < 8; i++){
         if((stm.instr.stm.reg_list>>i)&1){
           dmem.write(addr, rf[i]);
+          caches.access(addr);
           stats.numRegReads++;
           stats.numMemWrites++;
           addr += 4;
