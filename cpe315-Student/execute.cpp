@@ -213,7 +213,7 @@ void execute() {
   int num1, num2, result, BitCount;
   unsigned int bit;
   unsigned short registers = 0;
-  bool wback = FALSE;
+  char wback = 0;
 
   /* Convert instruction to correct type */
   /* Types are described in Section A5 of the armv7 manual */
@@ -581,7 +581,7 @@ void execute() {
     case LDM:
       decode(ldm);
       BitCount = getBitCount(ldm.instr.ldm.reg_list);
-      wback = (ldm.instr.ldm.reg_list >> ldm.instr.ldm.rn) & 0;
+      wback = (ldm.instr.ldm.reg_list >> ldm.instr.ldm.rn)&1 ;
       addr = rf[ldm.instr.ldm.rn];
       stats.numRegReads++;
       for(int i = 0; i < 8; i++){
@@ -593,7 +593,7 @@ void execute() {
           addr += 4;
         }
       }
-      if(wback){
+      if(wback == 0){
         rf.write(ldm.instr.ldm.rn, rf[ldm.instr.ldm.rn]+4*BitCount);
         stats.numRegWrites++;
       }

@@ -197,6 +197,7 @@ SP_Ops decode (const SP_Type data) {
   }
   else if (data.instr.cmp.op == 1) {
     // Here you'll need to SP_CMP similar to above
+    cout << "cmp r"<<setbase(10)<<(data.instr.cmp.d<<3|data.instr.cmp.rd)<<", r"<<data.instr.cmp.rm<<endl;
     return SP_CMP;
   }
   else {
