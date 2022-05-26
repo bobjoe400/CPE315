@@ -191,7 +191,7 @@ SP_Ops decode (const SP_Type data) {
       cout << "add r"<<data.instr.add.rd<<", sp, r"<<data.instr.add.rd<<endl;
     }
     else{
-      cout << "add r"<<data.instr.add.rd << ", r"<<data.instr.add.rm<<endl;
+      cout << "add r"<<data.instr.add.rd<<", r"<<data.instr.add.rd << ", r"<<data.instr.add.rm<<endl;
     }
     return SP_ADD;
   }
@@ -218,7 +218,7 @@ LD_ST_Ops decode (const LD_ST_Type data) {
       if(opts.instrs){
         cout << "strb r" << data.instr.ld_st_reg.rt <<", [r" << data.instr.ld_st_reg.rn << ", r" << data.instr.ld_st_reg.rm << "]"<<endl;
       }
-      return LDRBR;
+      return STRBR;
     }
     else if (data.instr.class_type.opB == LD_ST_OPB_LDR) {
       if(opts.instrs){
@@ -453,11 +453,11 @@ BL_Ops decode (const BL_Type data) {
 int decode (const LDM_Type data) {
   // complete
   int tot_registers = 0;
-  cout << "ldm "<<data.instr.ldm.rn;
-  if((data.instr.ldm.reg_list>>data.instr.ldm.rn) == 0){
+  cout << "ldm r"<<data.instr.ldm.rn;
+  if(((data.instr.ldm.reg_list>>data.instr.ldm.rn)&1) == 0){
     cout << "!";
   }
-  cout<< ", ";
+  cout<< ", {";
   for(int i = 0; i < 8; i++){
     if(data.instr.ldm.reg_list>>i & 1){
       if(tot_registers>1){

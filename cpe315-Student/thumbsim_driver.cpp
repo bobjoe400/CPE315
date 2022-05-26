@@ -108,7 +108,26 @@ void Memory<Data32, Data32>::dump(DataType dt) const {
 // cache size in blocks). You should also update the "hits" and
 // "misses" counters.
 bool Cache::access(unsigned int address) {
-  return false;
+  int index, tag, block;
+  int indexmask, blockmask;
+  int blockoffset, indexoffset;
+  bool hitormiss;
+  blockoffset = static_cast<unsigned int>(log2(blocksize*8));
+  indexoffset = static_cast<unsigned int>(log2(size/blocksize));
+  indexmask = static_cast<unsigned int>(size/blocksize - 1);
+  blockmask = static_cast<unsigned int>(blocksize*8 - 1);
+  index = (address>>blockoffset)&indexmask;
+  block = address&blockmask;
+  tag = address>>(indexoffset+blockoffset);
+  if(entries[index] == tag){
+    hitormiss = true;
+    hits++;
+  }else{
+    hitormiss = false;
+    misses++;
+    entries[index] = tag;
+  }
+  return hitormiss;
 }
 
 void Stats::print() {
