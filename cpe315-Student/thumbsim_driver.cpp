@@ -111,23 +111,21 @@ bool Cache::access(unsigned int address) {
   int index, tag, block;
   int indexmask, blockmask;
   int blockoffset, indexoffset;
-  bool hitormiss = false;
-  blockoffset = static_cast<unsigned int>(log2(blocksize*8));
+  blockoffset = static_cast<unsigned int>(log2(blocksize));
   indexoffset = static_cast<unsigned int>(log2(size/blocksize));
   indexmask = static_cast<unsigned int>(size/blocksize - 1);
-  blockmask = static_cast<unsigned int>(blocksize*8 - 1);
+  blockmask = static_cast<unsigned int>(blocksize - 1);
   index = (address>>blockoffset)&indexmask;
   block = address&blockmask;
   tag = address>>(indexoffset+blockoffset);
   if(entries[index] == tag){
-    hitormiss = true;
     hits++;
+    return true;
   }else{
-    hitormiss = false;
     misses++;
     entries[index] = tag;
+    return false;
   }
-  return hitormiss;
 }
 
 void Stats::print() {
