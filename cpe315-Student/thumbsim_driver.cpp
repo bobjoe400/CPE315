@@ -111,7 +111,7 @@ bool Cache::access(unsigned int address) {
   int index, tag, block;
   int indexmask, blockmask;
   int blockoffset, indexoffset;
-  bool hitormiss;
+  bool hitormiss = false;
   blockoffset = static_cast<unsigned int>(log2(blocksize*8));
   indexoffset = static_cast<unsigned int>(log2(size/blocksize));
   indexmask = static_cast<unsigned int>(size/blocksize - 1);

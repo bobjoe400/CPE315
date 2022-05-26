@@ -208,8 +208,8 @@ void execute() {
   unsigned int pctarget = PC + 2;
   stats.numRegReads++;
   unsigned int addr;
-  int i, n, m, offset, currPC, branchAddr;
-  unsigned int list, mask;
+  int i, n, m, offset;
+  unsigned int list, mask, currPC, branchAddr;
   int num1, num2, result, BitCount;
   unsigned int bit;
   unsigned short registers = 0;
@@ -239,6 +239,7 @@ void execute() {
 
   // This counts as a write to the PC register
   rf.write(PC_REG, pctarget);
+  stats.numRegWrites++;
 
   itype = decode(ALL_Types(instr));
 
@@ -548,16 +549,18 @@ void execute() {
       // this should work for all your conditional branches.
       // needs stats
       currPC = PC;
-      branchAddr = PC + 2 * signExtend8to32ui(cond.instr.b.imm) + 2;
+      branchAddr = PC + 2 * signExtend8to32ui(cond.instr.b.imm);
       if (checkCondition(cond.instr.b.cond)){
-        rf.write(PC_REG, branchAddr);
-        if(branchAddr<currPC){
+        rf.write(PC_REG, PC + 2 * signExtend8to32ui(cond.instr.b.imm)+2);
+        stats.numRegReads++;
+        stats.numRegWrites++;
+        if(branchAddr<=currPC){
           stats.numBackwardBranchesTaken++;
         }else{
-          stats.numForwardBranchesTaken++;;
+          stats.numForwardBranchesTaken++;
         }
       }else{
-        if(branchAddr<currPC){
+        if(branchAddr<=currPC){
           stats.numBackwardBranchesNotTaken++;
         }else{
           stats.numForwardBranchesNotTaken++;
@@ -569,7 +572,9 @@ void execute() {
       // condition check, and an 11-bit immediate field
       //needs stats
       decode(uncond);
-      rf.write(PC_REG, PC + (2* signExtend11to32ui(uncond.instr.b.imm)) + 2);
+      rf.write(PC_REG, PC + (2* signExtend11to32ui(uncond.instr.b.imm))+2);
+      stats.numRegReads++;
+      stats.numRegWrites++;
       stats.numBranches++;
       break;
     case LDM:
