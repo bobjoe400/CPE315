@@ -177,7 +177,7 @@ static int checkCondition(unsigned short cond) {
       return TRUE;
       break;
   }
-  return FALSE;
+  return FALSE; 
 }
 
 
